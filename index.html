@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weekly Workout Plan</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      background: #f8f9fa;
+    }
+    .workout-day {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #fff;
+      transition: 0.3s;
+    }
+    .workout-day h3 {
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    .exercise {
+      margin-bottom: 15px;
+      display: flex;
+      align-items: flex-start;
+    }
+    .exercise h5 {
+      margin-bottom: 5px;
+      font-size: 1.1em;
+    }
+    .exercise p {
+      margin: 0;
+    }
+    .tips {
+      font-size: 0.9em;
+      color: #555;
+    }
+    .time-display {
+      font-size: 0.85em;
+      color: #fff;
+      margin-right: 15px;
+    }
+    .completed-exercise {
+      background: #d4edda; /* greenish background for completed */
+      border-left: 5px solid #28a745;
+      padding: 10px;
+      border-radius: 3px;
+    }
+    #tipsSection {
+      margin-top: 40px;
+      padding: 20px;
+      background: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    @media (max-width: 576px) {
+      .filters-row {
+        flex-direction: column;
+      }
+      .filters-row > * {
+        margin-bottom: 10px;
+      }
+    }
+    .exercise-details {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">MyWorkoutPlan</a>
+    <div class="d-flex align-items-center ms-auto">
+      <div id="dateTime" class="time-display me-3"></div>
+    </div>
+  </div>
+</nav>
+
+<div class="container my-4">
+  <!-- Only Day and Tag Filters -->
+  <div class="row filters-row align-items-center">
+    <div class="col-6 col-sm-6 mb-2 mb-sm-0">
+      <select id="dayFilter" class="form-select">
+        <option value="">-- Select Day --</option>
+        <option value="Monday">Monday</option>
+        <option value="Tuesday">Tuesday</option>
+        <option value="Wednesday">Wednesday</option>
+        <option value="Thursday">Thursday</option>
+        <option value="Friday">Friday</option>
+      </select>
+    </div>
+    <div class="col-6 col-sm-6 mb-2 mb-sm-0">
+      <select id="tagFilter" class="form-select">
+        <option value="">-- Select Tag --</option>
+        <option value="chest">Chest</option>
+        <option value="back">Back</option>
+        <option value="triceps">Triceps</option>
+        <option value="biceps">Biceps</option>
+        <option value="shoulders">Shoulders</option>
+        <option value="legs">Leg</option>
+        <option value="core">Core</option>
+        <option value="v-shape">V-shape</option>
+      </select>
+    </div>
+  </div>
+
+  <hr class="my-4"/>
+
+  <!-- Workouts Section -->
+  <div id="workoutContainer">
+
+    <!-- Monday: Chest & Back -->
+    <div class="workout-day" data-day="Monday" data-tags="chest,back">
+      <h3>Monday: Chest & Back</h3>
+      <p class="tips">Focus on pushing and pulling movements.</p>
+
+      <div class="exercise" data-tags="chest">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Incline Dumbbell Press</h5>
+          <p>Targets: Upper chest, front shoulders, triceps</p>
+          <p>Sets/Reps: 4 sets of 8-10 reps</p>
+          <p>Rest: 60 seconds</p>
+          <p class="tips">Keep shoulders back, no flared elbows.</p>
+        </div>
+      </div>
+
+      <div class="exercise" data-tags="back">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Seated Cable Row</h5>
+          <p>Targets: Mid-back, lats, rhomboids</p>
+          <p>Sets/Reps: 4 sets of 8-10 reps</p>
+          <p>Rest: 60 seconds</p>
+          <p class="tips">Chest up, pull towards navel.</p>
+        </div>
+      </div>
+
+      <div class="exercise" data-tags="chest">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Dumbbell Chest Fly OR Pec Deck (Optional)</h5>
+          <p>Targets: Chest (inner/outer)</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">Arms slightly bent, controlled descent.</p>
+        </div>
+      </div>
+
+      <div class="exercise" data-tags="back">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Lat Pulldown (Wide Grip)</h5>
+          <p>Targets: Lats, upper back, biceps</p>
+          <p>Sets/Reps: 4 sets of 8-10 reps</p>
+          <p>Rest: 60 seconds</p>
+          <p class="tips">Pull bar to upper chest, no jerking.</p>
+        </div>
+      </div>
+
+      <div class="exercise" data-tags="chest,back">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Dumbbell Pullover</h5>
+          <p>Targets: Lats, chest, serratus</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 60 seconds</p>
+          <p class="tips">Feel the stretch, keep core tight.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tuesday: Biceps & Triceps -->
+    <div class="workout-day" data-day="Tuesday" data-tags="biceps,triceps">
+      <h3>Tuesday: Biceps & Triceps</h3>
+      <p class="tips">Arm isolation day. Mind-muscle connection is key.</p>
+
+      <div class="exercise" data-tags="biceps">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Dumbbell Hammer Curl</h5>
+          <p>Targets: Biceps (brachialis), forearms</p>
+          <p>Sets/Reps: 3 sets of 8-10 reps</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">No swinging, elbows at sides.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="biceps">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Cable Bicep Curl</h5>
+          <p>Targets: Biceps brachii</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">Stand upright, no shrugged shoulders.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="triceps">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Overhead Dumbbell Triceps Extension</h5>
+          <p>Targets: Long head of triceps</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">Keep elbows forward, full extension.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="triceps">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Cable Triceps Pushdown</h5>
+          <p>Targets: Triceps</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 30 seconds</p>
+          <p class="tips">Elbows fixed, extend fully.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="biceps">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Incline Dumbbell Curl</h5>
+          <p>Targets: Biceps peak</p>
+          <p>Sets/Reps: 3 sets of 8-10 reps</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">Elbows slightly behind torso, controlled.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wednesday: Leg Day -->
+    <div class="workout-day" data-day="Wednesday" data-tags="legs">
+      <h3>Wednesday: Leg Day</h3>
+      <p class="tips">Focus on lower body strength and stability.</p>
+
+      <div class="exercise" data-tags="legs">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Dumbbell Goblet Squat</h5>
+          <p>Targets: Quads, glutes, core</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 60 seconds</p>
+          <p class="tips">Chest up, knees out.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="legs">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Leg Press (Machine)</h5>
+          <p>Targets: Quads, hamstrings, glutes</p>
+          <p>Sets/Reps: 4 sets of 8-10 reps</p>
+          <p>Rest: 60 seconds</p>
+          <p class="tips">No locking knees, controlled movement.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="legs">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Dumbbell Romanian Deadlift</h5>
+          <p>Targets: Hamstrings, glutes</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 60 seconds</p>
+          <p class="tips">Hinge at hips, flat back.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="legs">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Leg Extension (Machine)</h5>
+          <p>Targets: Quads</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">Align knees, smooth reps.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="legs">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Seated Leg Curl (Machine)</h5>
+          <p>Targets: Hamstrings</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">No jerking, hips down.</p>
+        </div>
+      </div>
+
+      <div class="exercise" data-tags="legs">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>(Optional) Standing/Seated Calf Raise</h5>
+          <p>Targets: Calves</p>
+          <p>Sets/Reps: 3 sets of 15-20 reps</p>
+          <p>Rest: 30 seconds</p>
+          <p class="tips">Full range, pause at top.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thursday: Shoulders & Arms -->
+    <div class="workout-day" data-day="Thursday" data-tags="shoulders,triceps,biceps">
+      <h3>Thursday: Shoulders & Arms</h3>
+      <p class="tips">Balance delts and arms, maintain good posture.</p>
+
+      <div class="exercise" data-tags="shoulders">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Seated Dumbbell Shoulder Press</h5>
+          <p>Targets: Front/lateral delts, triceps</p>
+          <p>Sets/Reps: 3 sets of 8-10 reps</p>
+          <p>Rest: 60 seconds</p>
+          <p class="tips">Back flat, no excessive arch.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="shoulders">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Cable Lateral Raise</h5>
+          <p>Targets: Lateral delts</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 30 seconds</p>
+          <p class="tips">Lift to shoulder height, slight bend.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="shoulders">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Face Pulls OR Reverse Pec Deck (Optional)</h5>
+          <p>Targets: Rear delts, upper back</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">Elbows high, squeeze shoulder blades.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="biceps">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Dumbbell Hammer Curl (Light)</h5>
+          <p>Targets: Biceps, forearms</p>
+          <p>Sets/Reps: 3 sets of 8-10 reps</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">No swinging, elbows stable.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="triceps">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Cable Triceps Kickback</h5>
+          <p>Targets: Triceps</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">Hinge forward, elbow fixed.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Friday: Core & V-Shape -->
+    <div class="workout-day" data-day="Friday" data-tags="core,v-shape">
+      <h3>Friday: Core & V-Shape</h3>
+      <p class="tips">Focus on abs and obliques, aim for stability.</p>
+
+      <div class="exercise" data-tags="core">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Hanging Knee Raises (or Leg Raises)</h5>
+          <p>Targets: Lower abs</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 30 seconds</p>
+          <p class="tips">Control the swing, engage core.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="v-shape,core">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Cable Woodchoppers</h5>
+          <p>Targets: Obliques, rotational stability</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps per side</p>
+          <p>Rest: 45 seconds</p>
+          <p class="tips">Twist from torso, stable hips.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="core">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Plank (Hold)</h5>
+          <p>Targets: Entire core</p>
+          <p>Sets/Reps: 3 sets, hold 30-60 seconds</p>
+          <p>Rest: 30 seconds</p>
+          <p class="tips">Neutral spine, no sagging.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="core">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Russian Twists (Dumbbell)</h5>
+          <p>Targets: Obliques, abs</p>
+          <p>Sets/Reps: 3 sets of 12-15 reps per side</p>
+          <p>Rest: 30 seconds</p>
+          <p class="tips">Rotate shoulders, no bouncing.</p>
+        </div>
+      </div>
+      
+      <div class="exercise" data-tags="core">
+        <input type="checkbox" class="me-2 exercise-checkbox"/>
+        <div class="exercise-details">
+          <h5>Reverse Crunch</h5>
+          <p>Targets: Lower abs</p>
+          <p>Sets/Reps: 3 sets of 10-12 reps</p>
+          <p>Rest: 30 seconds</p>
+          <p class="tips">Lift hips gently, controlled.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips & Motivation Section -->
+  <div id="tipsSection" class="mt-5">
+    <h4>Tips & Motivation</h4>
+    <p id="tipsContent">Select a day or muscle group to see targeted tips and motivation here!</p>
+  </div>
+</div>
+
+<!-- Modal for Completion -->
+<div class="modal fade" id="completionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Congratulations!</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>You have completed all exercises for today! Keep pushing forward and stay motivated!</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">Awesome!</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Real-time date and clock
+  function updateDateTime(){
+    const now = new Date();
+    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const dayName = days[now.getDay()];
+    const dateStr = now.toLocaleDateString();
+    const timeStr = now.toLocaleTimeString();
+    document.getElementById('dateTime').textContent = `${dayName}, ${dateStr} ${timeStr}`;
+  }
+  setInterval(updateDateTime,1000);
+  updateDateTime();
+
+  // Tips data
+  const tipsData = {
+    "monday": "Chest & Back Tip: Focus on form first. A strong back supports a stronger chest press!",
+    "tuesday": "Biceps & Triceps Tip: Squeeze at the top of each rep. Quality over quantity!",
+    "wednesday": "Leg Day Tip: Strong legs build a strong foundation. Slow and controlled!",
+    "thursday": "Shoulders & Arms Tip: Balance your pushes and pulls for healthy shoulders!",
+    "friday": "Core & V-Shape Tip: A strong core stabilizes every lift. Consistency is key!",
+
+    "chest": "Chest Motivation: A powerful chest shows strength and confidence!",
+    "back": "Back Motivation: A strong back is essential. Build it and stand proud!",
+    "biceps": "Biceps Motivation: Each curl counts. Keep aiming for that peak!",
+    "triceps": "Triceps Motivation: Strong triceps unlock stronger presses. Push on!",
+    "shoulders": "Shoulder Motivation: Broad shoulders enhance posture and presence!",
+    "legs": "Legs Motivation: Don't skip leg day. Powerful legs = better performance!",
+    "core": "Core Motivation: Stability starts from the center. Engage and strengthen!",
+    "v-shape": "V-shape Motivation: Strive for that classic tapered physique!"
+  };
+
+  $(document).ready(function(){
+    // When day or tag changes, automatically filter
+    $('#dayFilter, #tagFilter').change(function(){
+      filterWorkouts();
+    });
+
+    // Checkbox logic for exercises
+    $('.exercise-checkbox').change(function(){
+      const exerciseDiv = $(this).closest('.exercise');
+      if ($(this).is(':checked')) {
+        exerciseDiv.addClass('completed-exercise');
+        triggerConfetti();
+      } else {
+        exerciseDiv.removeClass('completed-exercise');
+      }
+      checkAllExercisesCompleted();
+    });
+  });
+
+  function filterWorkouts() {
+    const selectedDay = $('#dayFilter').val().toLowerCase().trim();
+    const selectedTag = $('#tagFilter').val().toLowerCase().trim();
+
+    $('.workout-day').show(); // show all first
+
+    let filterApplied = false;
+
+    $('.workout-day').each(function(){
+      const day = $(this).data('day').toString().toLowerCase();
+      const tags = $(this).data('tags').toString().toLowerCase();
+
+      let matchDay = true;
+      if (selectedDay) {
+        matchDay = (day === selectedDay);
+      }
+
+      let matchTag = true;
+      if (selectedTag) {
+        matchTag = tags.includes(selectedTag);
+      }
+
+      if (!matchDay || !matchTag) {
+        $(this).hide();
+      } else {
+        $(this).show();
+        filterApplied = true;
+      }
+    });
+
+    if (filterApplied) {
+      $('.workout-day:visible').each(function(){
+        $('#workoutContainer').prepend($(this));
+      });
+    }
+
+    updateTipsSection();
+  }
+
+  function updateTipsSection() {
+    let firstVisibleDay = $('.workout-day:visible').first();
+    if (firstVisibleDay.length === 0) {
+      $('#tipsContent').text("No workouts found. Try selecting a different day or tag.");
+      return;
+    }
+
+    let day = firstVisibleDay.data('day').toString().toLowerCase();
+    let tags = firstVisibleDay.data('tags').toString().toLowerCase();
+
+    if (tipsData[day]) {
+      $('#tipsContent').text(tipsData[day]);
+    } else {
+      let tagArray = tags.split(',');
+      let matchedTag = tagArray.find(t => tipsData[t]);
+      if (matchedTag) {
+        $('#tipsContent').text(tipsData[matchedTag]);
+      } else {
+        $('#tipsContent').text("Stay consistent, stay focused, and keep pushing your limits!");
+      }
+    }
+  }
+
+  // Check if all exercises in the currently top visible workout-day are completed
+  function checkAllExercisesCompleted() {
+    let topDay = $('.workout-day:visible').first();
+    if (topDay.length === 0) return;
+
+    let totalExercises = topDay.find('.exercise-checkbox').length;
+    let completedCount = topDay.find('.exercise-checkbox:checked').length;
+
+    if (completedCount === totalExercises && totalExercises > 0) {
+      setTimeout(() => {
+        triggerConfettiBurst();
+        $('#completionModal').modal('show');
+      }, 500);
+    }
+  }
+
+  // Confetti for single exercise completion
+  function triggerConfetti() {
+    var end = Date.now() + 200;
+    (function frame() {
+      confetti({
+        particleCount: 3,
+        startVelocity: 30,
+        spread: 360,
+        origin: {
+          x: Math.random(),
+          y: Math.random()
+        }
+      });
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    }());
+  }
+
+  // Confetti burst when all done
+  function triggerConfettiBurst() {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  }
+
+  // Initialize the page with no filters
+  updateTipsSection();
+</script>
+</body>
+</html>
