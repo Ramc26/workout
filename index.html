@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Favicon/Thumbnail for home screen / GitHub Pages -->
+  <link rel="icon" type="image/jpeg" href="https://static.vecteezy.com/system/resources/thumbnails/050/764/784/small/cute-man-lifting-barbell-gym-cartoon-vector.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FitQuest - Workout Tracker</title>
+  <!-- Google Font for a modern, classy look -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  
+  <style>
+    :root {
+      --primary-color: #2B8CBE;
+      --secondary-color: #F4A261;
+    }
+
+    body {
+      background: #f8f9fa;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .workout-day {
+      border: 1px solid #ddd;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #fff;
+      transition: transform 0.2s;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+
+    .workout-day:active {
+      transform: scale(0.98);
+    }
+
+    .exercise {
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #f8f9fa;
+      position: relative;
+      /* Yellow dashed border by default */
+      border: 2px dashed #facc15;
+    }
+
+    /* When an exercise is completed, turn the whole box green */
+    .exercise.completed-exercise {
+      background-color: #d1fae5; /* light green background */
+      border: 2px solid #4ade80; /* green solid border */
+    }
+
+    /* Increase checkbox size for mobile and ease of use */
+    input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      position: relative;
+      z-index: 2;
+      cursor: pointer;
+    }
+
+    .exercise h5 {
+      color: var(--primary-color);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    #streakCounter {
+      font-size: 1.1em;
+      animation: pulse 2s infinite;
+    }
+
+    .achievement-badge {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    /* Enhanced share modal styling */
+    .share-post {
+      background: linear-gradient(135deg, #2B8CBE, #F4A261);
+      border-radius: 20px;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+    .share-post h2, .share-post h3 {
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    .share-post .fs-5 {
+      margin-bottom: 1rem;
+    }
+    /* 3D Button style for share modal */
+    .btn-3d {
+      background-color: #fff;
+      color: var(--primary-color);
+      border: none;
+      border-radius: 10px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-3d:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .navbar-brand {
+        font-size: 1.2rem;
+      }
+      
+      .exercise {
+        padding: 10px;
+      }
+    }
+    .active-day {
+      border: 2px solid var(--primary-color)!important;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">🏋️ FitQuest</a>
+      <div class="d-flex align-items-center ms-auto">
+        <div id="greeting" class="text-light me-3 d-none d-sm-block"></div>
+        <div id="dateTime" class="text-light"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Progress Section -->
+  <div class="container mt-4">
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="progress w-75">
+            <div id="dailyProgress" class="progress-bar bg-success" role="progressbar"></div>
+          </div>
+          <div id="streakCounter" class="badge bg-warning text-dark">🔥 0 Day Streak</div>
+        </div>
+      </div>
+    </div>
+  </div>
+      
+
+  <div class="container my-4">
+    <!-- Filters: Day and Tag -->
+    <div class="row filters-row align-items-center">
+      <div class="col-6 col-sm-6 mb-2 mb-sm-0">
+        <select id="dayFilter" class="form-select">
+          <option value="">-- Select Day -- (Default: Today)</option>
+          <option value="Monday">Monday</option>
+          <option value="Tuesday">Tuesday</option>
+          <option value="Wednesday">Wednesday</option>
+          <option value="Thursday">Thursday</option>
+          <option value="Friday">Friday</option>
+        </select>
+      </div>
+      <div class="col-6 col-sm-6 mb-2 mb-sm-0">
+        <select id="tagFilter" class="form-select">
+          <option value="">-- Select Tag --</option>
+          <option value="chest">Chest</option>
+          <option value="back">Back</option>
+          <option value="triceps">Triceps</option>
+          <option value="biceps">Biceps</option>
+          <option value="shoulders">Shoulders</option>
+          <option value="legs">Legs</option>
+          <option value="core">Core</option>
+          <option value="v-shape">V-shape</option>
+          <option value="hiit">HIIT</option>
+        </select>
+      </div>
+    </div>
+
+    <hr class="my-4"/>
+
+    <!-- Workouts Section -->
+    <div id="workoutContainer">
+
+      <!-- Monday: Chest + Triceps + Core -->
+      <div class="workout-day" data-day="Monday" data-tags="chest,triceps,core">
+        <h3>Monday: Chest + Triceps + Core</h3>
+        <p class="tips">Focus on pushing movements to target chest, triceps, and core.</p>
+
+        <div class="exercise" data-tags="chest">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Incline Dumbbell Press">Incline Dumbbell Press</h5>
+            <p>Targets: Chest, triceps</p>
+            <p>Sets/Reps: 4x8–10 | 60s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="chest">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Cable Flys">Cable Flys</h5>
+            <p>Targets: Chest</p>
+            <p>Sets/Reps: 3x12–15 | 45s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="triceps">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Weighted Dips">Weighted Dips</h5>
+            <p>Targets: Triceps, chest</p>
+            <p>Sets/Reps: 3x10–12 | 45s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="triceps">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Cable Tricep Pushdowns">Cable Tricep Pushdowns</h5>
+            <p>Targets: Triceps</p>
+            <p>Sets/Reps: 3x15 | 30s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="core">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Decline Russian Twists">Decline Russian Twists</h5>
+            <p>Targets: Obliques, core</p>
+            <p>Sets/Reps: 3x20 | 30s rest</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tuesday: Back + Biceps + Core -->
+      <div class="workout-day" data-day="Tuesday" data-tags="back,biceps,core">
+        <h3>Tuesday: Back + Biceps + Core</h3>
+        <p class="tips">Focus on pulling movements to target back, biceps, and core.</p>
+
+        <div class="exercise" data-tags="back">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Lat Pulldown">Lat Pulldown</h5>
+            <p>Targets: Lats, upper back</p>
+            <p>Sets/Reps: 4x8–10 | 60s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="back">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Cable Row">Cable Row</h5>
+            <p>Targets: Mid-back, lats</p>
+            <p>Sets/Reps: 4x10–12 | 60s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="biceps">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Dumbbell Hammer Curl">Dumbbell Hammer Curl</h5>
+            <p>Targets: Biceps</p>
+            <p>Sets/Reps: 3x12 | 45s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="biceps">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Face Pulls">Face Pulls</h5>
+            <p>Targets: Rear delts, upper back</p>
+            <p>Sets/Reps: 3x15 | 30s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="core">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Hanging Leg Raises">Hanging Leg Raises</h5>
+            <p>Targets: Lower abs</p>
+            <p>Sets/Reps: 3x12–15 | 30s rest</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wednesday: Shoulders + V-Shape Core -->
+      <div class="workout-day" data-day="Wednesday" data-tags="shoulders,core,v-shape">
+        <h3>Wednesday: Shoulders + V-Shape Core</h3>
+        <p class="tips">Focus on shoulders and core to build a V-shaped torso.</p>
+
+        <div class="exercise" data-tags="shoulders">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Overhead Dumbbell Press">Overhead Dumbbell Press</h5>
+            <p>Targets: Shoulders, triceps</p>
+            <p>Sets/Reps: 4x8–10 | 60s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="shoulders">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Lateral Raises">Lateral Raises</h5>
+            <p>Targets: Lateral delts</p>
+            <p>Sets/Reps: 4x15 | 45s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="shoulders">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Cable Upright Row">Cable Upright Row</h5>
+            <p>Targets: Traps, shoulders</p>
+            <p>Sets/Reps: 3x12 | 45s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="core">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Cable Woodchoppers">Cable Woodchoppers</h5>
+            <p>Targets: Obliques, core</p>
+            <p>Sets/Reps: 3x15/side | 30s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="core">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Dragon Flags">Dragon Flags</h5>
+            <p>Targets: Lower abs</p>
+            <p>Sets/Reps: 3x8–10 | 30s rest</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thursday: Legs + Core -->
+      <div class="workout-day" data-day="Thursday" data-tags="legs,core">
+        <h3>Thursday: Legs + Core</h3>
+        <p class="tips">Focus on lower body strength and core stability.</p>
+
+        <div class="exercise" data-tags="legs">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Barbell Squats">Barbell Squats</h5>
+            <p>Targets: Quads, glutes</p>
+            <p>Sets/Reps: 4x8–10 | 60s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="legs">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Romanian Deadlift">Romanian Deadlift</h5>
+            <p>Targets: Hamstrings, glutes</p>
+            <p>Sets/Reps: 4x10–12 | 60s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="legs">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Walking Lunges">Walking Lunges</h5>
+            <p>Targets: Quads, glutes</p>
+            <p>Sets/Reps: 3x12/leg | 45s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="legs">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Leg Curls">Leg Curls</h5>
+            <p>Targets: Hamstrings</p>
+            <p>Sets/Reps: 4x10–12 | 45s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="core">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Weighted Plank">Weighted Plank</h5>
+            <p>Targets: Core</p>
+            <p>Sets/Reps: 3x1 min | 30s rest</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Friday: Full-Body HIIT + Core -->
+      <div class="workout-day" data-day="Friday" data-tags="hiit,core">
+        <h3>Friday: Full-Body HIIT + Core</h3>
+        <p class="tips">High-intensity interval training to burn fat and build endurance.</p>
+
+        <div class="exercise" data-tags="hiit">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Kettlebell Swings">Kettlebell Swings</h5>
+            <p>Targets: Glutes, hamstrings, core</p>
+            <p>Sets/Reps: 4x45s | 15s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="hiit">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Burpees">Burpees</h5>
+            <p>Targets: Full body</p>
+            <p>Sets/Reps: 4x30s | 15s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="hiit">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Mountain Climbers">Mountain Climbers</h5>
+            <p>Targets: Core, shoulders</p>
+            <p>Sets/Reps: 4x45s | 15s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="hiit">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Jump Rope">Jump Rope</h5>
+            <p>Targets: Cardio, calves</p>
+            <p>Sets/Reps: 4x30s | 15s rest</p>
+          </div>
+        </div>
+
+        <div class="exercise" data-tags="core">
+          <input type="checkbox" class="me-2 exercise-checkbox"/>
+          <div class="exercise-details">
+            <h5 data-bs-toggle="modal" data-bs-target="#exerciseModal" data-exercise="Flutter Kicks">Flutter Kicks</h5>
+            <p>Targets: Lower abs</p>
+            <p>Sets/Reps: 3x30s | 30s rest</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tips & Motivation Section -->
+    <div id="tipsSection" class="mt-5">
+      <h4>Tips & Motivation</h4>
+      <p id="tipsContent">Select a day or muscle group to see targeted tips and motivation here!</p>
+    </div>
+  </div>
+
+  <!-- Exercise Details Modal -->
+  <div class="modal fade" id="exerciseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalExerciseTitle"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="modalExerciseDescription"></p>
+          <h6>How to Do It:</h6>
+          <p id="modalExerciseHowTo"></p>
+          <h6>Mistakes to Avoid:</h6>
+          <p id="modalExerciseMistakes"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Completion -->
+  <div class="modal fade" id="completionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Congratulations!</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>You have completed all exercises for today! Keep pushing forward and stay motivated!</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" data-bs-dismiss="modal">Awesome!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Post Modal with enhanced 3D style -->
+  <div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content share-post">
+        <div class="modal-body">
+          <h2>🎉 Workout Complete! 🎉</h2>
+          <!-- <iframe src="https://www.behance.net/embed/project/65397547?ilo0=1" height="50" width="100" allowfullscreen lazyload frameborder="0" allow="clipboard-write" refererPolicy="strict-origin-when-cross-origin"></iframe> -->
+          <div class="display-4 mb-3"><img src="output-onlinegiftools.gif" height="170" width="300"></div>
+          <h3 id="completionQuote">Who needs superpowers when you have gains? 🦸</h3>
+          <div class="fs-5 mb-4">
+            <div>🔥 <span id="shareStreak">0</span> Day Streak</div>
+            <div>✅ Completed: <span id="shareDate"></span></div>
+          </div>
+          <button class="btn btn-3d" onclick="window.location.reload()">🏁 Start Next Workout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Utility: Get current day name (e.g., Monday)
+    function getCurrentDay() {
+      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      return days[new Date().getDay()];
+    }
+
+    // Real-time Date and Clock
+    function updateDateTime(){
+      const now = new Date();
+      const dayName = getCurrentDay();
+      const dateStr = now.toLocaleDateString();
+      const timeStr = now.toLocaleTimeString();
+      document.getElementById('dateTime').textContent = `${dayName}, ${dateStr} ${timeStr}`;
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+  
+    // Greeting based on hour
+    function updateGreeting() {
+      const hour = new Date().getHours();
+      const greetings = ["🌞 Good Morning!", "💥 Good Afternoon!", "🌙 Good Evening!"];
+      $('#greeting').text(greetings[Math.floor(hour / 8)]);
+    }
+    updateGreeting();
+  
+    // Tips and Motivation Data
+    const tipsData = {
+      "monday": "Chest & Back Tip: Focus on form first. A strong back supports a stronger chest press!",
+      "tuesday": "Biceps & Triceps Tip: Squeeze at the top of each rep. Quality over quantity!",
+      "wednesday": "Leg Day Tip: Strong legs build a strong foundation. Slow and controlled!",
+      "thursday": "Shoulders & Arms Tip: Balance your pushes and pulls for healthy shoulders!",
+      "friday": "Core & V-Shape Tip: A strong core stabilizes every lift. Consistency is key!",
+      "chest": "Chest Motivation: A powerful chest shows strength and confidence!",
+      "back": "Back Motivation: A strong back is essential. Build it and stand proud!",
+      "biceps": "Biceps Motivation: Each curl counts. Keep aiming for that peak!",
+      "triceps": "Triceps Motivation: Strong triceps unlock stronger presses. Push on!",
+      "shoulders": "Shoulder Motivation: Broad shoulders enhance posture and presence!",
+      "legs": "Legs Motivation: Don't skip leg day. Powerful legs = better performance!",
+      "core": "Core Motivation: Stability starts from the center. Engage and strengthen!",
+      "v-shape": "V-shape Motivation: Strive for that classic tapered physique!",
+      "hiit": "HIIT Motivation: Push through the intensity and feel the burn!"
+    };
+  
+    // Exercise Details Data for the Modal
+    const exerciseDetails = {
+      "Incline Dumbbell Press": {
+        howTo: "Set bench to a 30–45° incline. Hold dumbbells at shoulder level, palms facing forward. Press weights upward until arms are fully extended. Lower slowly.",
+        mistakes: "Avoid arching your back excessively. Keep elbows at about 45°."
+      },
+      "Cable Flys": {
+        howTo: "Set cable pulleys to shoulder height. Grab handles, step forward, and lean slightly. Pull cables together in front of your chest with a hugging motion, then return with control.",
+        mistakes: "Avoid using too heavy weights or swinging your arms."
+      },
+      "Weighted Dips": {
+        howTo: "Use a dip machine or parallel bars. Keep your body upright, lower until elbows reach 90°, then push back up.",
+        mistakes: "Avoid leaning forward excessively and ensure proper depth."
+      },
+      "Cable Tricep Pushdowns": {
+        howTo: "Attach a straight bar to the cable. Push down until your arms are fully extended, then slowly return.",
+        mistakes: "Avoid using momentum; keep your elbows fixed at your sides."
+      },
+      "Decline Russian Twists": {
+        howTo: "Sit on a decline bench, hold a weight, and twist side to side while keeping your core engaged.",
+        mistakes: "Avoid using momentum; focus on controlled twisting."
+      },
+      "Lat Pulldown": {
+        howTo: "Sit at the lat pulldown machine, grip the bar wider than shoulder-width. Pull down to your chest, squeezing your lats, then slowly return.",
+        mistakes: "Avoid leaning back excessively and keep your shoulders down."
+      },
+      "Cable Row": {
+        howTo: "Sit at the cable row machine, grab the handle, and pull toward your abdomen while squeezing your back muscles. Return slowly.",
+        mistakes: "Avoid rounding your back; pull towards your navel."
+      },
+      "Dumbbell Hammer Curl": {
+        howTo: "Hold dumbbells with palms facing each other. Curl upward while keeping elbows close to your sides.",
+        mistakes: "Avoid swinging the weights; maintain control."
+      },
+      "Face Pulls": {
+        howTo: "Attach a rope at eye level on the cable machine. Pull the rope towards your face with elbows high and squeeze your rear delts.",
+        mistakes: "Avoid pulling too low; keep elbows at shoulder height."
+      },
+      "Hanging Leg Raises": {
+        howTo: "Hang from a bar and lift your legs to about 90° before lowering them slowly.",
+        mistakes: "Avoid swinging your body; engage your core throughout."
+      },
+      "Overhead Dumbbell Press": {
+        howTo: "Sit on a bench with back support, hold dumbbells at shoulder level, and press upward in a controlled motion.",
+        mistakes: "Avoid arching your back; keep your core tight."
+      },
+      "Lateral Raises": {
+        howTo: "Hold dumbbells at your sides. Raise your arms to shoulder height and then lower them slowly.",
+        mistakes: "Avoid using momentum or swinging the weights."
+      },
+      "Cable Upright Row": {
+        howTo: "Attach a straight bar to the cable machine. Pull the bar upward towards your chin.",
+        mistakes: "Avoid raising elbows too high; keep them below shoulder level."
+      },
+      "Cable Woodchoppers": {
+        howTo: "Stand sideways to the cable machine and pull the handle diagonally across your body.",
+        mistakes: "Avoid twisting with your arms alone; engage your core."
+      },
+      "Dragon Flags": {
+        howTo: "Lie on a bench, lift your legs and torso in one smooth motion, then lower slowly.",
+        mistakes: "Avoid using momentum; control the descent."
+      },
+      "Barbell Squats": {
+        howTo: "Stand with feet shoulder-width apart, lower your hips until your thighs are parallel to the floor, then push back up.",
+        mistakes: "Avoid letting your knees cave in; keep your chest up."
+      },
+      "Romanian Deadlift": {
+        howTo: "Hold a barbell, hinge at the hips, lower the bar to mid-shin, then return upright.",
+        mistakes: "Avoid rounding your back; keep it neutral."
+      },
+      "Walking Lunges": {
+        howTo: "Step forward into a lunge, lowering both knees to about 90° before pushing back up.",
+        mistakes: "Avoid leaning too far forward; maintain an upright torso."
+      },
+      "Leg Curls": {
+        howTo: "Use the leg curl machine. Curl your legs upward, then slowly lower them back.",
+        mistakes: "Avoid jerking the weight; keep your hips down."
+      },
+      "Weighted Plank": {
+        howTo: "Hold a plank position with a weight on your back, keeping your core engaged.",
+        mistakes: "Avoid letting your hips sag or pike."
+      },
+      "Kettlebell Swings": {
+        howTo: "Hinge at your hips and swing the kettlebell to shoulder height using your hip drive.",
+        mistakes: "Avoid using your arms to lift; focus on hip power."
+      },
+      "Burpees": {
+        howTo: "Drop into a push-up, jump your feet forward, then explode up with a clap overhead.",
+        mistakes: "Avoid skipping any part of the movement; maintain full range of motion."
+      },
+      "Mountain Climbers": {
+        howTo: "From a plank, alternate bringing your knees to your chest quickly while keeping your core tight.",
+        mistakes: "Avoid letting your hips sag; keep the motion controlled."
+      },
+      "Jump Rope": {
+        howTo: "Skip rope at a steady, consistent pace.",
+        mistakes: "Avoid jumping too high; maintain controlled movements."
+      },
+      "Flutter Kicks": {
+        howTo: "Lie on your back, lift your legs slightly, and alternate kicking them up and down.",
+        mistakes: "Avoid arching your back; keep your core engaged."
+      }
+    };
+  
+    // Motivational Quotes for daily and completion
+    const motivationalQuotes = {
+      daily: [
+        "Sweat is just fat crying! 💦",
+        "Your phone isn't the only thing that needs charging 🔋",
+        "The only bad workout is the one you didn't do! 💪",
+        "Did someone say pizza? 🍕 (Do 10 more reps!)"
+      ],
+      completion: [
+        "Another day, another slay! 💅",
+        "You're stronger than yesterday! 💥",
+        "Gains goblin mode activated! 🧌",
+        "Who needs superpowers when you have gains? 🦸"
+      ]
+    };
+  
+    // Local Storage Keys and State Management
+    const STORAGE_KEYS = {
+      STREAK: 'fitquest_streak',
+      LAST_COMPLETED: 'fitquest_last_completed',
+      CHECKED_EXERCISES: 'fitquest_checked_exercises'
+    };
+
+    let workoutState = {
+      streak: parseInt(localStorage.getItem(STORAGE_KEYS.STREAK)) || 0,
+      lastCompleted: localStorage.getItem(STORAGE_KEYS.LAST_COMPLETED) || null,
+      checkedExercises: JSON.parse(localStorage.getItem(STORAGE_KEYS.CHECKED_EXERCISES)) || {}
+    };
+
+    // Initialize Application on Document Ready
+    $(document).ready(() => {
+      restoreCheckedStates();
+      setupEventListeners();
+      updateStreakDisplay();
+      updateProgress();
+      setInterval(updateDateTime, 1000);
+      setInterval(rotateMotivationalQuote, 15000);
+    });
+
+    // Restore checkbox states from localStorage
+    function restoreCheckedStates() {
+      $('.exercise-checkbox').each(function() {
+        const exerciseId = $(this).closest('.exercise').find('h5').text().trim();
+        $(this).prop('checked', !!workoutState.checkedExercises[exerciseId]);
+        $(this).closest('.exercise').toggleClass('completed-exercise', !!workoutState.checkedExercises[exerciseId]);
+      });
+    }
+
+    // Set up event listeners
+    function setupEventListeners() {
+      $('#dayFilter, #tagFilter').on('change', handleFilterChange);
+      $('.exercise-checkbox').on('change', handleExerciseCheck);
+      $('#exerciseModal').on('show.bs.modal', handleExerciseModalShow);
+    }
+
+    // Filter Handling: Show/hide workout days based on filter selections
+    function handleFilterChange() {
+      const selectedDay = $('#dayFilter').val().toLowerCase().trim();
+      const selectedTag = $('#tagFilter').val().toLowerCase().trim();
+      
+      $('.workout-day').each(function() {
+        const day = $(this).data('day').toLowerCase();
+        const tags = $(this).data('tags').toString().toLowerCase();
+        const isVisible = (!selectedDay || day === selectedDay) && 
+                          (!selectedTag || tags.includes(selectedTag));
+        $(this).toggle(isVisible).toggleClass('active-day', isVisible);
+      });
+      updateProgress();
+    }
+
+    // Handle checkbox changes (exercise completion)
+    function handleExerciseCheck() {
+      const exerciseId = $(this).closest('.exercise').find('h5').text().trim();
+      const isChecked = $(this).prop('checked');
+      
+      $(this).closest('.exercise').toggleClass('completed-exercise', isChecked);
+      workoutState.checkedExercises[exerciseId] = isChecked;
+      localStorage.setItem(STORAGE_KEYS.CHECKED_EXERCISES, JSON.stringify(workoutState.checkedExercises));
+      updateProgress();
+      if(isChecked) {
+        triggerConfetti();
+      }
+    }
+
+    // Update progress bar based on checked exercises for the active day
+    function updateProgress() {
+      // Use filter selection if available; otherwise, default to today's day
+      let activeDay = $('#dayFilter').val();
+      if (!activeDay) activeDay = getCurrentDay();
+      
+      const dayExercises = $(`.workout-day[data-day="${activeDay}"] .exercise-checkbox:visible`);
+      const completed = dayExercises.filter(':checked').length;
+      const total = dayExercises.length;
+      const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+      
+      $('#dailyProgress').css('width', `${progress}%`);
+      
+      // If all exercises are completed and at least one exists, trigger completion actions
+      if (completed === total && total > 0) {
+        showCompletion();
+      }
+    }
+
+    // Update streak: if last completion was yesterday, increment; otherwise, reset to 1.
+    function updateStreak() {
+      const today = new Date();
+      if (workoutState.lastCompleted) {
+        const lastDate = new Date(workoutState.lastCompleted);
+        // Normalize times by setting hours to midnight for comparison
+        today.setHours(0,0,0,0);
+        lastDate.setHours(0,0,0,0);
+        const diffDays = (today - lastDate) / (1000 * 60 * 60 * 24);
+        if (diffDays === 1) {
+          workoutState.streak++;
+        } else if(diffDays > 1) {
+          workoutState.streak = 1;
+        }
+      } else {
+        workoutState.streak = 1;
+      }
+      workoutState.lastCompleted = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEYS.STREAK, workoutState.streak);
+      localStorage.setItem(STORAGE_KEYS.LAST_COMPLETED, workoutState.lastCompleted);
+      updateStreakDisplay();
+    }
+
+    // Display the current streak on the page
+    function updateStreakDisplay() {
+      $('#streakCounter').text(`🔥 ${workoutState.streak} Day Streak`);
+    }
+
+    // Show completion actions when a day's exercises are 100% complete
+    function showCompletion() {
+      // Ensure streak is updated only once per day
+      if (!workoutState.lastCompleted || new Date().toDateString() !== new Date(workoutState.lastCompleted).toDateString()) {
+        updateStreak();
+      }
+      triggerConfettiBurst();
+      showShareModal();
+    }
+
+    // Display the share modal with confetti and updated streak info
+    function showShareModal() {
+      const emojis = ["🏆", "💪", "🔥", "🚀"];
+      $('#completionEmoji').text(emojis[Math.floor(Math.random() * emojis.length)]);
+      $('#completionQuote').text(motivationalQuotes.completion[Math.floor(Math.random() * motivationalQuotes.completion.length)]);
+      $('#shareStreak').text(workoutState.streak);
+      $('#shareDate').text(new Date().toLocaleDateString());
+      $('#shareModal').modal('show');
+    }
+
+    // Rotate daily motivational quote (if used elsewhere)
+    function rotateMotivationalQuote() {
+      $('#quoteOfTheDay').fadeOut(500, function() {
+        $(this).text(motivationalQuotes.daily[Math.floor(Math.random() * motivationalQuotes.daily.length)]).fadeIn(500);
+      });
+    }
+
+    // Confetti Effects for individual checkbox and full completion
+    function triggerConfetti() {
+      confetti({
+        particleCount: 30,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ['#FF6B6B', '#4ECDC4', '#45B7D1']
+      });
+    }
+
+    function triggerConfettiBurst() {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#FF6B6B', '#4ECDC4', '#45B7D1']
+      });
+    }
+
+    // Handle exercise modal to show details about the selected exercise
+    function handleExerciseModalShow(event) {
+      const button = $(event.relatedTarget);
+      const exerciseName = button.data('exercise');
+      const modal = $(this);
+      modal.find('#modalExerciseTitle').text(exerciseName);
+      modal.find('#modalExerciseHowTo').text(exerciseDetails[exerciseName].howTo);
+      modal.find('#modalExerciseMistakes').text(exerciseDetails[exerciseName].mistakes);
+    }
+  </script>
+  
+</body>
+</html>
